@@ -2,13 +2,18 @@ micronaut:
   application:
     name: pix
 
+grpc:
+  server:
+    port: ${SERVER_PORT:50051}
+    keep_alive_time: 1h
+    max-inbound-message-size: 1024
+
 datasources:
   default:
     url: jdbc:postgresql://localhost:7075/Aplicacao
     driverClassName: org.postgresql.Driver
     username: root
     password: root
-    schema-generate: CREATE_DROP
 
 jpa:
   default:

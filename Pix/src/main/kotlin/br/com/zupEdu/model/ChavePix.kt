@@ -1,13 +1,22 @@
 package br.com.zupEdu.model
 
-import javax.persistence.Entity
-import javax.persistence.GeneratedValue
-import javax.persistence.Id
+import br.com.zupEdu.TipoChavePix
+import javax.persistence.*
 
 @Entity
+@Table(name = "chave_pix")
 class ChavePix(
-    val codigoInterno: String,
-    val chavePix:String
+    @Column(unique = true)
+    val codigoInternoDoCliente: String,
+
+    @Column(unique = true)
+    val chavePix:String,
+
+    @Enumerated(EnumType.STRING)
+    val tipoDeChave: TipoDeChave,
+
+    @Enumerated(EnumType.STRING)
+    val tipoConta: TipoConta
     ){
     @Id
     @GeneratedValue

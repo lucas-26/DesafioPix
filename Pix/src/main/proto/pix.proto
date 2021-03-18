@@ -9,6 +9,34 @@ package br.com.zupEdu;
 
 service PixService {
   rpc send (PixRequest) returns (PixReply) {}
+
+  rpc gerarChavePix(ChavePixRequest) returns (ChavePixResponse) {}
+}
+
+enum TipoChavePix {
+  DESCONHECIDO_TIPO_CHAVE_PIX = 0;
+  TELEFONE_CELULAR= 1;
+  EMAIL = 2;
+  CHAVE_ALEATORIA = 3;
+  CPF = 4;
+}
+
+enum TipoConta {
+    DESCONHECIDO_TIPO_CONTA = 0;
+    CONTA_CORRENTE = 1;
+    CONTA_POUPANCA = 2;
+}
+
+message ChavePixRequest {
+  string idCliente = 1;
+  TipoChavePix tipoChavePix = 2;
+  string chave = 3;
+  TipoConta tipoDeConta = 4;
+}
+
+message ChavePixResponse {
+  string clientid = 1;
+  string pixId = 2;
 }
 
 message PixRequest {
