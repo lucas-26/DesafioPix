@@ -1,6 +1,6 @@
 package br.com.zupEdu.grpc.request
 
-import br.com.zupEdu.model.ChavePix
+import br.com.zupEdu.model.Pix
 import br.com.zupEdu.model.TipoConta
 import br.com.zupEdu.model.TipoDeChave
 import io.micronaut.core.annotation.Introspected
@@ -21,7 +21,7 @@ class ChavePixRequestGrpc(
     @field:NotNull
     val tipoConta: String
 ){
-    fun toModel(): ChavePix {
+    fun toModel(): Pix {
         var tipoChavePixEnum: TipoDeChave =
             when {
                 tipoChavePix.toUpperCase() == TipoDeChave.TELEFONE_CELULAR.toString() -> {
@@ -58,7 +58,7 @@ class ChavePixRequestGrpc(
                 TipoConta.CONTA_CORRENTE
                 }
 
-        return ChavePix(codigoInternoDoCliente = idInternoClient,
+        return Pix(codigoInternoDoCliente = idInternoClient,
                         chavePix = chavePix,
                         tipoDeChave = tipoChavePixEnum,
                         tipoConta = tipoContaPixEnum
