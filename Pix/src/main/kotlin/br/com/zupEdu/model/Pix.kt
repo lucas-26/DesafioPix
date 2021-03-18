@@ -4,8 +4,8 @@ import br.com.zupEdu.TipoChavePix
 import javax.persistence.*
 
 @Entity
-@Table(name = "chave_pix")
-class ChavePix(
+@Table(name = "Pix")
+class Pix(
     @Column(unique = true)
     val codigoInternoDoCliente: String,
 

@@ -1,13 +1,15 @@
 package br.com.zupEdu.grpc
 
+import br.com.zupEdu.*
+import br.com.zupEdu.grpc.ExtensionFunction.toModel
+import br.com.zupEdu.grpc.exception.ChavePixNaoExisteException
+import br.com.zupEdu.grpc.exception.EsseClienteNaoCadastrouEssaChavePixException
 import io.grpc.Status
 
 import org.slf4j.LoggerFactory
 
-import br.com.zupEdu.ChavePixRequest
-import br.com.zupEdu.ChavePixResponse
-import br.com.zupEdu.PixServiceGrpc
 import br.com.zupEdu.grpc.exception.EsseUsuariojaEstaCadastradoNoSistemaException
+import br.com.zupEdu.grpc.request.ChavePixDeletarRequestGrpc
 import br.com.zupEdu.grpc.request.ChavePixRequestGrpc
 import io.grpc.stub.StreamObserver
 import io.micronaut.validation.Validated
@@ -20,7 +22,6 @@ class PixGrpcServer(@Inject private val service: NovaChavePixService) : PixServi
     private val logger = LoggerFactory.getLogger(this::class.java)
 
     override fun gerarChavePix(request: ChavePixRequest?, responseObserver: StreamObserver<ChavePixResponse>?) {
-        logger.info("Iniciando a criação do pix")
         try {
             val chavePixRequestGrpc = request?.let {
                 ChavePixRequestGrpc(
@@ -43,7 +44,28 @@ class PixGrpcServer(@Inject private val service: NovaChavePixService) : PixServi
                 .withDescription("Esse usuário já tem uma chave pix cadastrada")
                 .asRuntimeException())
         }
+    }
 
+    override fun apagarChavePix(request: ChavePixApagarRequest?, responseObserver: StreamObserver<ChavePixApagadaResponse>?) {
+        val apagarPix = request.toModel()
+
+        try {
+            if (apagarPix != null) service.apagar(apagarPix)
+
+        } catch (e: EsseClienteNaoCadastrouEssaChavePixException){
+            responseObserver?.onError(Status.CANCELLED
+                .withDescription("Usuario que cadastrou a chave Pix não é o mesmo que quer apagar ela")
+                .asRuntimeException())
+        } catch (e: ChavePixNaoExisteException){
+            responseObserver?.onError(Status.NOT_FOUND
+                .withDescription("Essa chave Pix não está cadastrada no sistemas")
+                .asRuntimeException())
+        }
+
+        responseObserver?.onNext(ChavePixApagadaResponse.newBuilder()
+            .setMessage("Chave pix: ${apagarPix?.pixId} foi apagada com sucesso")
+            .build())
+        responseObserver?.onCompleted()
     }
 }
 

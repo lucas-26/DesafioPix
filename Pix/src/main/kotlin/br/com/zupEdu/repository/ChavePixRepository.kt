@@ -1,14 +1,20 @@
 package br.com.zupEdu.repository
 
-import br.com.zupEdu.model.ChavePix
+import br.com.zupEdu.model.Pix
 import io.micronaut.data.annotation.Query
 import io.micronaut.data.annotation.Repository
 import io.micronaut.data.jpa.repository.JpaRepository
 import java.util.*
 
 @Repository
-interface ChavePixRepository: JpaRepository<ChavePix, Long> {
+interface ChavePixRepository: JpaRepository<Pix, Long> {
 
-    @Query("SELECT a FROM chave_pix as a WHERE a.codigo_interno_do_cliente = :codigo")
-    fun buscaSeClienteExiste (codigo: String): Optional<ChavePix>
+    @Query("SELECT a FROM Pix a WHERE a.codigoInternoDoCliente  = :codigo")
+    fun buscaSeClienteExiste (codigo: String): Optional<Pix>
+
+    @Query("SELECT b FROM Pix b Where b.chavePix = :chavepix")
+    fun buscaChavePixPeloIdChave(chavepix: String): Optional<Pix>
+
+    @Query("Delete FROM Pix as b Where b.chavePix = :chavepix")
+    fun deletarPixPorChave(chavepix: String)
 }
