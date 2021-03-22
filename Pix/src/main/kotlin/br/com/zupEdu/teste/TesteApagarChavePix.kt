@@ -10,8 +10,8 @@ fun main() {
         .build()
 
     var req = br.com.zupEdu.ChavePixApagarRequest.newBuilder()
-        .setClientid("ae93a61c-0642-43b3-bb8e-a17072295955")
-        .setPixId("40764442058")
+        .setClientid("2ac09233-21b2-4276-84fb-d83dbd9f8bab")
+        .setPixId("933e8a20-1378-4eb6-830c-673b3d4dd894")
         .build()
 
     val client = PixServiceGrpc.newBlockingStub(channel)
