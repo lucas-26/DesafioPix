@@ -16,7 +16,9 @@ class Pix(
     val tipoDeChave: TipoDeChave,
 
     @Enumerated(EnumType.STRING)
-    val tipoConta: TipoConta
+    val tipoConta: TipoConta,
+
+    var chaveBcb: String?
     ){
     @Id
     @GeneratedValue

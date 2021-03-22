@@ -13,7 +13,7 @@ fun main() {
     var req = br.com.zupEdu.ChavePixRequest.newBuilder()
         .setIdCliente("2ac09233-21b2-4276-84fb-d83dbd9f8bab")
         .setChave("83082363083")
-        .setTipoChavePix(TipoChavePix.CPF)
+        .setTipoChavePix(TipoChavePix.CHAVE_ALEATORIA)
         .setTipoDeConta(TipoConta.CONTA_POUPANCA)
         .build()
 

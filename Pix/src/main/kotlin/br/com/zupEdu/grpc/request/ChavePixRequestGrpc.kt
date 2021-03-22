@@ -19,7 +19,7 @@ class ChavePixRequestGrpc(
     @field:NotNull
     val tipoChavePix: String,
     @field:NotNull
-    val tipoConta: String
+    val tipoConta: String,
 ){
     fun toModel(): Pix {
         var tipoChavePixEnum: TipoDeChave =
@@ -58,10 +58,12 @@ class ChavePixRequestGrpc(
                 TipoConta.CONTA_CORRENTE
                 }
 
-        return Pix(codigoInternoDoCliente = idInternoClient,
+        return Pix(
+            codigoInternoDoCliente = idInternoClient,
                         chavePix = chavePix,
                         tipoDeChave = tipoChavePixEnum,
-                        tipoConta = tipoContaPixEnum
+                        tipoConta = tipoContaPixEnum,
+                        chaveBcb = null
             )
     }
 }

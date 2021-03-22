@@ -5,5 +5,5 @@ enum class TipoDeChave {
     TELEFONE_CELULAR,
     CPF,
     EMAIL,
-    CHAVE_ALEATORIA
+    CHAVE_ALEATORIA;
 }
