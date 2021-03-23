@@ -10,11 +10,12 @@ import org.slf4j.LoggerFactory
 
 import br.com.zupEdu.grpc.exception.EsseUsuariojaEstaCadastradoNoSistemaException
 import br.com.zupEdu.grpc.request.ChavePixRequestGrpc
-import br.com.zupEdu.model.TipoConta
+import br.com.zupEdu.grpc.ExtensionFunction.*
 import io.grpc.stub.StreamObserver
 import io.micronaut.validation.Validated
 import javax.inject.Inject
 import javax.inject.Singleton
+import javax.transaction.Transactional
 
 @Singleton
 @Validated
@@ -68,7 +69,7 @@ class PixGrpcServer(@Inject private val service: ChavePixService) : PixServiceGr
         responseObserver?.onCompleted()
     }
 
-    override fun consultaChavePix(request: ChavePixConsultaKeyManagerRequest?, responseObserver: StreamObserver<ChavePixConsultaKeyManagerResponse>?) {
+    override fun consultaChavePix(request: ChavePixConsultaKeyManagerRequest?, responseObserver: StreamObserver<ChavePixConsultaResponse>?) {
          val buscaPix = request?.toModel()
 
             try {
@@ -78,8 +79,8 @@ class PixGrpcServer(@Inject private val service: ChavePixService) : PixServiceGr
                         withDescription("OS Parametros passado estao vazios")
                             .asRuntimeException())
                 }
-                val buscarChavePix   = buscaPix?.let { service.buscarChavePix(it) }
-                responseObserver?.onNext(ChavePixConsultaKeyManagerResponse.newBuilder().
+                val buscarChavePix =  buscaPix?.let { service.buscarChavePix(it) }
+                responseObserver?.onNext(ChavePixConsultaResponse.newBuilder().
                 setPixId(buscarChavePix?.pixId)
                     .setClientId(buscarChavePix?.ClientId)
                     .setTipoChave(buscarChavePix?.tipoChave.gerarEnum())
@@ -101,34 +102,30 @@ class PixGrpcServer(@Inject private val service: ChavePixService) : PixServiceGr
             }
     }
 
-}
+    @Transactional
+    override fun consultaChavePixOutrosSistemas(request: ChavePixConsultaParaServicosRequest?, responseObserver: StreamObserver<ChavePixConsultaResponse>?) {
 
-private fun String?.gerarEnumConta(): br.com.zupEdu.TipoConta? {
-    if (this?.toUpperCase().equals("CONTA_POUPANCA")){
-        return br.com.zupEdu.TipoConta.CONTA_POUPANCA
+        try {
+            val buscarChavePix = service.buscaChavePixOutrosSistemas(request?.pixID)
+
+            responseObserver?.onNext(ChavePixConsultaResponse.newBuilder().
+            setPixId(buscarChavePix?.pixId)
+                .setClientId(buscarChavePix?.ClientId)
+                .setTipoChave(buscarChavePix?.tipoChave.gerarEnum())
+                .setValorChave(buscarChavePix?.valorChave)
+                .setCpf(buscarChavePix?.cpf)
+                .setNomeInstituicao(buscarChavePix?.nomeInstituicao)
+                .setAgencia(buscarChavePix?.agencia)
+                .setNumeroConta(buscarChavePix?.numeroConta)
+                .setTipoConta(buscarChavePix?.tipoConta.gerarEnumConta())
+                .setDataHora(buscarChavePix?.dataHora)
+                .build())
+            responseObserver?.onCompleted()
+        } catch (e: IllegalArgumentException){
+            responseObserver?.onError(
+                Status.NOT_FOUND.
+                withDescription("Essa chave Pix não está cadastrada no sistemas")
+                    .asRuntimeException())
+        }
     }
-        return br.com.zupEdu.TipoConta.CONTA_CORRENTE
 }
-
-private fun String?.gerarEnum(): TipoChavePix? {
-    return when {
-        this?.toUpperCase().equals("CPF") -> {
-            TipoChavePix.CPF
-        }
-        this?.toUpperCase().equals("TELEFONE_CELULAR") -> {
-            TipoChavePix.TELEFONE_CELULAR
-
-        }
-        this?.toUpperCase().equals("EMAIL") -> {
-            TipoChavePix.EMAIL
-        }
-        this?.toUpperCase().equals("CHAVE_ALEATORIA") -> {
-            TipoChavePix.CHAVE_ALEATORIA
-        } else -> {
-            return  TipoChavePix.DESCONHECIDO_TIPO_CHAVE_PIX
-        }
-    }
-}
-
-
-
