@@ -12,6 +12,8 @@ service PixService {
   rpc gerarChavePix(ChavePixRequest) returns (ChavePixResponse) {}
 
   rpc apagarChavePix(ChavePixApagarRequest) returns (ChavePixApagadaResponse) {}
+
+  rpc consultaChavePix(ChavePixConsultaKeyManagerRequest) returns (ChavePixConsultaKeyManagerResponse) {}
 }
 
 enum TipoChavePix {
@@ -55,4 +57,22 @@ message PixRequest {
 
 message PixReply {
   string message = 1;
+}
+
+message ChavePixConsultaKeyManagerRequest {
+  string ClientId = 1;
+  string PixID = 2;
+}
+
+message ChavePixConsultaKeyManagerResponse {
+  string pixId = 1;
+  string ClientId = 2;
+  TipoChavePix tipoChave = 3;
+  string valorChave = 4;
+  string cpf = 5;
+  string nomeInstituicao = 6;
+  string agencia = 7;
+  string numeroConta = 8;
+  TipoConta tipoConta = 9;
+  string dataHora = 10;
 }
