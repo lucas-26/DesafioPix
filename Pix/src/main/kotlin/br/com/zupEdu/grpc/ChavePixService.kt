@@ -1,10 +1,13 @@
 package br.com.zupEdu.grpc
 
+import br.com.zupEdu.grpc.ExtensionFunction.gerarpixBcB
 import br.com.zupEdu.grpc.exception.ChavePixNaoExisteException
 import br.com.zupEdu.grpc.exception.EsseClienteNaoCadastrouEssaChavePixException
 import br.com.zupEdu.grpc.exception.EsseUsuariojaEstaCadastradoNoSistemaException
+import br.com.zupEdu.grpc.request.BuscaChavePixRequestGrpc
 import br.com.zupEdu.grpc.request.ChavePixDeletarRequestGrpc
 import br.com.zupEdu.grpc.request.ChavePixRequestGrpc
+import br.com.zupEdu.grpc.response.BuscaChavePixResponseGrpc
 import br.com.zupEdu.grpc.response.ChaveApagadaPixReponseGrpc
 import br.com.zupEdu.grpc.response.ChavePixResponseGrpc
 import br.com.zupEdu.model.Pix
@@ -28,9 +31,9 @@ import javax.validation.Valid
 
 @Validated
 @Singleton
-class NovaChavePixService(@Inject val chavePixRepository: ChavePixRepository,
-                          @Inject val codigoInternoClient: CodigoInternoClient,
-                          @Inject val bancoDoBrasilService: CadastraBCBPixClient
+class ChavePixService(@Inject val chavePixRepository: ChavePixRepository,
+                      @Inject val codigoInternoClient: CodigoInternoClient,
+                      @Inject val bancoDoBrasilService: CadastraBCBPixClient
                           ) {
 
     @Transactional
@@ -86,38 +89,27 @@ class NovaChavePixService(@Inject val chavePixRepository: ChavePixRepository,
         bancoDoBrasilService.deletePix(apagarChavePix.get().chaveBcb.toString(),deletePixKeyRequest)
         return ChaveApagadaPixReponseGrpc("PIX ${apagarChavePix.get().chavePix} apagado")
     }
-}
 
-fun gerarpixBcB(response: ContasResponse, chavePixModel: Pix): CreatePixKeyRequest {
-    return CreatePixKeyRequest(
-        keyType = "${VerificarOTipo(chavePixModel.tipoDeChave)}",
-        key = "${chavePixModel.chavePix}",
-        bankAccount = BankAccountRequest(
-            participant = "${response.instituicao.ispb}",
-            branch = "${response.agencia}",
-            accountNumber = "${response.numero}",
-            accountType = "${verificaTipoConta(response.tipo)}"
-        ),
-        OwnerRequest(
-            type = "NATURAL_PERSON",
-            name = "${response.titular.nome}",
-            taxIdNumber = "${response.titular.cpf}"
-        )
-    )
-}
+    @Transactional
+    fun buscarChavePix(req: BuscaChavePixRequestGrpc): BuscaChavePixResponseGrpc {
 
-fun VerificarOTipo(tipoDeChave: TipoDeChave): String {
-    if (tipoDeChave == TipoDeChave.CHAVE_ALEATORIA) {
-        return "RANDOM".toUpperCase()
-    } else if (tipoDeChave == TipoDeChave.TELEFONE_CELULAR){
-        return "PHONE".toUpperCase()
+        val buscaBancoInterno = chavePixRepository.buscaChavePixPeloIdChave(req.chavePix)
+            if(buscaBancoInterno.get().chavePix.isNullOrEmpty()){
+                throw IllegalArgumentException("Esse clienteid não existe no sistema ERP do Itaú")
+            }
+
+        val buscaBcb = bancoDoBrasilService.returnPixbyChave(buscaBancoInterno.get().chaveBcb.toString())
+        val codigoInterno = codigoInternoClient.validaCodigoInterno(buscaBancoInterno.get().codigoInternoDoCliente)
+
+        return BuscaChavePixResponseGrpc(pixId = buscaBancoInterno.get().chavePix,
+        ClientId = buscaBancoInterno.get().codigoInternoDoCliente,
+            tipoChave = buscaBcb.body().key.toString()  ,
+            valorChave = buscaBcb.body().keyType.toString(),
+            cpf = codigoInterno[0].titular.cpf ,
+            nomeInstituicao = codigoInterno[0].instituicao.nome,
+            agencia = codigoInterno[0].agencia ,
+            numeroConta = codigoInterno[0].numero,
+            tipoConta = buscaBancoInterno.get().tipoConta.toString(),
+            dataHora =  buscaBcb.body().createdAt.toString() )
     }
-    return tipoDeChave.toString().toUpperCase()
-}
-
-fun verificaTipoConta(tipo: String): String {
-    if (tipo.toUpperCase() == TipoConta.CONTA_CORRENTE.toString()){
-        return "CACC"
-    }
-    return "SVGS"
 }
