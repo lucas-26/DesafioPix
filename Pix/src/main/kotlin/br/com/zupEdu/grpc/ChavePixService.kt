@@ -11,16 +11,10 @@ import br.com.zupEdu.grpc.response.BuscaChavePixResponseGrpc
 import br.com.zupEdu.grpc.response.ChaveApagadaPixReponseGrpc
 import br.com.zupEdu.grpc.response.ChavePixResponseGrpc
 import br.com.zupEdu.model.Pix
-import br.com.zupEdu.model.TipoConta
-import br.com.zupEdu.model.TipoDeChave
 import br.com.zupEdu.repository.ChavePixRepository
 import br.com.zupEdu.service.CadastraBCBPixClient
 import br.com.zupEdu.service.CodigoInternoClient
-import br.com.zupEdu.service.request.BankAccountRequest
-import br.com.zupEdu.service.request.CreatePixKeyRequest
 import br.com.zupEdu.service.request.DeletePixKeyRequest
-import br.com.zupEdu.service.request.OwnerRequest
-import br.com.zupEdu.service.response.ContasResponse
 import io.micronaut.validation.Validated
 import java.lang.IllegalStateException
 import java.util.*
@@ -28,6 +22,8 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import javax.transaction.Transactional
 import javax.validation.Valid
+import javax.validation.constraints.NotBlank
+import javax.validation.constraints.NotNull
 
 @Validated
 @Singleton
@@ -99,6 +95,10 @@ class ChavePixService(@Inject val chavePixRepository: ChavePixRepository,
             }
 
         val buscaBcb = bancoDoBrasilService.returnPixbyChave(buscaBancoInterno.get().chaveBcb.toString())
+        if(buscaBancoInterno.get().chavePix.isNullOrEmpty()){
+            throw IllegalArgumentException("pix não foi encontrado no sistema do banco do brasil")
+        }
+
         val codigoInterno = codigoInternoClient.validaCodigoInterno(buscaBancoInterno.get().codigoInternoDoCliente)
 
         return BuscaChavePixResponseGrpc(pixId = buscaBancoInterno.get().chavePix,
@@ -111,5 +111,26 @@ class ChavePixService(@Inject val chavePixRepository: ChavePixRepository,
             numeroConta = codigoInterno[0].numero,
             tipoConta = buscaBancoInterno.get().tipoConta.toString(),
             dataHora =  buscaBcb.body().createdAt.toString() )
+    }
+
+    fun buscaChavePixOutrosSistemas(pixID: String?): BuscaChavePixResponseGrpc {
+
+        val buscaChavePixPeloIdChave = chavePixRepository.buscaChavePixPeloIdChave(pixID.toString())
+        val codigoInterno = codigoInternoClient.validaCodigoInterno(buscaChavePixPeloIdChave.get().codigoInternoDoCliente)
+        val chavePixBcb = bancoDoBrasilService.returnPixbyChave(buscaChavePixPeloIdChave.get().chaveBcb.toString())
+        if (buscaChavePixPeloIdChave.isEmpty or chavePixBcb.body().key.isNullOrEmpty()){
+            throw IllegalArgumentException("chave pix não foi encontrado")
+        }
+
+        return BuscaChavePixResponseGrpc(pixId = buscaChavePixPeloIdChave.get().chavePix,
+            ClientId = buscaChavePixPeloIdChave.get().codigoInternoDoCliente,
+            tipoChave = chavePixBcb.body().key.toString()  ,
+            valorChave = chavePixBcb.body().keyType.toString(),
+            cpf = codigoInterno[0].titular.cpf ,
+            nomeInstituicao = codigoInterno[0].instituicao.nome,
+            agencia = codigoInterno[0].agencia ,
+            numeroConta = codigoInterno[0].numero,
+            tipoConta = buscaChavePixPeloIdChave.get().tipoConta.toString(),
+            dataHora =  chavePixBcb.body().createdAt.toString() )
     }
 }
