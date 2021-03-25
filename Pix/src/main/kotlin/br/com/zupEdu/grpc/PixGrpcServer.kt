@@ -15,7 +15,6 @@ import io.grpc.stub.StreamObserver
 import io.micronaut.validation.Validated
 import javax.inject.Inject
 import javax.inject.Singleton
-import javax.transaction.Transactional
 
 @Singleton
 @Validated
@@ -102,14 +101,12 @@ class PixGrpcServer(@Inject private val service: ChavePixService) : PixServiceGr
             }
     }
 
-    @Transactional
     override fun consultaChavePixOutrosSistemas(request: ChavePixConsultaParaServicosRequest?, responseObserver: StreamObserver<ChavePixConsultaResponse>?) {
-
         try {
             val buscarChavePix = service.buscaChavePixOutrosSistemas(request?.pixID)
 
-            responseObserver?.onNext(ChavePixConsultaResponse.newBuilder().
-            setPixId(buscarChavePix?.pixId)
+            responseObserver?.onNext(ChavePixConsultaResponse.newBuilder()
+                .setPixId(buscarChavePix?.pixId)
                 .setClientId(buscarChavePix?.ClientId)
                 .setTipoChave(buscarChavePix?.tipoChave.gerarEnum())
                 .setValorChave(buscarChavePix?.valorChave)
@@ -124,6 +121,29 @@ class PixGrpcServer(@Inject private val service: ChavePixService) : PixServiceGr
         } catch (e: IllegalArgumentException){
             responseObserver?.onError(
                 Status.NOT_FOUND.
+                withDescription("Essa chave Pix não está cadastrada no sistemas")
+                    .asRuntimeException())
+        }
+    }
+
+    override fun consultaChavesDeUmCliente(request: ListaChavesPixDoClienteRequest?, responseObserver: StreamObserver<ListaChavesPixDoClienteResponse>?) {
+        try {
+            val buscaChavesUsuario = service.buscaChavesUsuario(request?.clienteId)
+            buscaChavesUsuario.forEach {
+                responseObserver?.onNext(ListaChavesPixDoClienteResponse.newBuilder()
+                    .setPixId(it.pixId)
+                    .setClienteId(it.ClienteId)
+                    .setTipoDeChave(it.tipoDeChave)
+                    .setValorDaChave(it.valorDaChave)
+                    .setTipoDConta(it.tipoDConta)
+                    .setDataHora(it.dataHora)
+                    .build()) }
+            responseObserver?.onCompleted()
+
+        } catch (e: Exception){
+            e.printStackTrace()
+            responseObserver?.onError(
+                Status.CANCELLED.
                 withDescription("Essa chave Pix não está cadastrada no sistemas")
                     .asRuntimeException())
         }

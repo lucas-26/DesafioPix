@@ -6,7 +6,6 @@ import javax.persistence.*
 @Entity
 @Table(name = "Pix")
 class Pix(
-    @Column(unique = true)
     val codigoInternoDoCliente: String,
 
     @Column(unique = true)
