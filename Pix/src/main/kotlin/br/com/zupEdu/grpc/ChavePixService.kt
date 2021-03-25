@@ -8,6 +8,7 @@ import br.com.zupEdu.grpc.request.BuscaChavePixRequestGrpc
 import br.com.zupEdu.grpc.request.ChavePixDeletarRequestGrpc
 import br.com.zupEdu.grpc.request.ChavePixRequestGrpc
 import br.com.zupEdu.grpc.response.BuscaChavePixResponseGrpc
+import br.com.zupEdu.grpc.response.BuscaChavesPixPorUsuarioResponseGrpc
 import br.com.zupEdu.grpc.response.ChaveApagadaPixReponseGrpc
 import br.com.zupEdu.grpc.response.ChavePixResponseGrpc
 import br.com.zupEdu.model.Pix
@@ -15,6 +16,7 @@ import br.com.zupEdu.repository.ChavePixRepository
 import br.com.zupEdu.service.CadastraBCBPixClient
 import br.com.zupEdu.service.CodigoInternoClient
 import br.com.zupEdu.service.request.DeletePixKeyRequest
+import com.google.common.collect.ImmutableList
 import io.micronaut.validation.Validated
 import java.lang.IllegalStateException
 import java.util.*
@@ -22,8 +24,6 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import javax.transaction.Transactional
 import javax.validation.Valid
-import javax.validation.constraints.NotBlank
-import javax.validation.constraints.NotNull
 
 @Validated
 @Singleton
@@ -113,8 +113,8 @@ class ChavePixService(@Inject val chavePixRepository: ChavePixRepository,
             dataHora =  buscaBcb.body().createdAt.toString() )
     }
 
+    @Transactional
     fun buscaChavePixOutrosSistemas(pixID: String?): BuscaChavePixResponseGrpc {
-
         val buscaChavePixPeloIdChave = chavePixRepository.buscaChavePixPeloIdChave(pixID.toString())
         val codigoInterno = codigoInternoClient.validaCodigoInterno(buscaChavePixPeloIdChave.get().codigoInternoDoCliente)
         val chavePixBcb = bancoDoBrasilService.returnPixbyChave(buscaChavePixPeloIdChave.get().chaveBcb.toString())
@@ -132,5 +132,22 @@ class ChavePixService(@Inject val chavePixRepository: ChavePixRepository,
             numeroConta = codigoInterno[0].numero,
             tipoConta = buscaChavePixPeloIdChave.get().tipoConta.toString(),
             dataHora =  chavePixBcb.body().createdAt.toString() )
+    }
+    @Transactional
+    fun buscaChavesUsuario(clienteId: String?): List<BuscaChavesPixPorUsuarioResponseGrpc> {
+        val buscaChavePixPeloIdChave = chavePixRepository.buscaChavesPorId(clienteId.toString())
+        val listResponse: MutableList<BuscaChavesPixPorUsuarioResponseGrpc> = mutableListOf()
+        buscaChavePixPeloIdChave.forEach {
+            val returnPixbyChave = bancoDoBrasilService.returnPixbyChave(it.chaveBcb.toString())
+            val novaChvePixUsuatio = BuscaChavesPixPorUsuarioResponseGrpc(
+                pixId = returnPixbyChave.body().key.toString(),
+                ClienteId = it.codigoInternoDoCliente,
+                tipoDeChave = it.tipoDeChave.toString(),
+                valorDaChave = it.chavePix,
+                tipoDConta = it.tipoConta.toString(),
+                dataHora = returnPixbyChave.body().createdAt.toString())
+            listResponse.add(novaChvePixUsuatio)
+        }
+        return listResponse
     }
 }

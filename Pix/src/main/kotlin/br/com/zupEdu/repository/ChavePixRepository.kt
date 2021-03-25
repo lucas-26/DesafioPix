@@ -17,4 +17,7 @@ interface ChavePixRepository: JpaRepository<Pix, Long> {
 
     @Query("Delete FROM Pix as b Where b.chavePix = :chavepix")
     fun deletarPixPorChave(chavepix: String)
+
+    @Query("select a from Pix as a where a.codigoInternoDoCliente = :clienteid")
+    fun buscaChavesPorId(clienteid: String): List<Pix>
 }
