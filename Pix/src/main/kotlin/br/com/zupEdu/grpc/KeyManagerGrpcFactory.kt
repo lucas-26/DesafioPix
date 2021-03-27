@@ -13,4 +13,9 @@ class KeyManagerGrpcFactory(@GrpcChannel("keyManager") val channel: ManagedChann
     @Singleton
     fun registraChave() = PixServiceGrpc.newBlockingStub(channel)
 
+    fun deletaChave() = PixServiceGrpc.newBlockingStub(channel)
+
+    fun buscaUmaChavePix() = PixServiceGrpc.newBlockingStub(channel)
+
+    fun buscaTodasAsChavesPix() = PixServiceGrpc.newBlockingStub(channel)
 }
