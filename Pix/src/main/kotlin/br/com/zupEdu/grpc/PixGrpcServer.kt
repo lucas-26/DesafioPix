@@ -70,7 +70,6 @@ class PixGrpcServer(@Inject private val service: ChavePixService) : PixServiceGr
 
     override fun consultaChavePix(request: ChavePixConsultaKeyManagerRequest?, responseObserver: StreamObserver<ChavePixConsultaResponse>?) {
          val buscaPix = request?.toModel()
-
             try {
                 if (buscaPix == null) {
                     responseObserver?.onError(
