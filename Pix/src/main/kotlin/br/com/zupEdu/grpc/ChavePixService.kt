@@ -16,7 +16,6 @@ import br.com.zupEdu.repository.ChavePixRepository
 import br.com.zupEdu.service.CadastraBCBPixClient
 import br.com.zupEdu.service.CodigoInternoClient
 import br.com.zupEdu.service.request.DeletePixKeyRequest
-import com.google.common.collect.ImmutableList
 import io.micronaut.validation.Validated
 import java.lang.IllegalStateException
 import java.util.*
@@ -29,8 +28,7 @@ import javax.validation.Valid
 @Singleton
 class ChavePixService(@Inject val chavePixRepository: ChavePixRepository,
                       @Inject val codigoInternoClient: CodigoInternoClient,
-                      @Inject val bancoDoBrasilService: CadastraBCBPixClient
-                          ) {
+                      @Inject val bancoDoBrasilService: CadastraBCBPixClient) {
 
     @Transactional
     fun registra(@Valid novaChave: ChavePixRequestGrpc): ChavePixResponseGrpc {
@@ -52,7 +50,7 @@ class ChavePixService(@Inject val chavePixRepository: ChavePixRepository,
         val request21 = gerarpixBcB(response[0], chavePixModel)
         val registerPix = bancoDoBrasilService.registerPix(request21)
         chavePixModel.chaveBcb =  registerPix.body().key
-        chavePixRepository.save(chavePixModel)
+        println(chavePixRepository.save(chavePixModel))
         return ChavePixResponseGrpc( chavePixModel.chavePix)
     }
 
@@ -60,9 +58,7 @@ class ChavePixService(@Inject val chavePixRepository: ChavePixRepository,
     fun apagar(@Valid novaChaveApagar: ChavePixDeletarRequestGrpc): ChaveApagadaPixReponseGrpc {
 
         val verificaSeExisteNoSistemaERPitau = codigoInternoClient.validaCodigoInterno(novaChaveApagar.clientid)
-        if (verificaSeExisteNoSistemaERPitau.isNullOrEmpty()){
-            throw IllegalArgumentException("Esse clienteid não existe no sistema ERP do Itaú")
-        }
+        if (verificaSeExisteNoSistemaERPitau.isNullOrEmpty()) throw IllegalStateException("Ao buscar no erp, retornou null")
 
         val apagarChavePix: Optional<Pix> = chavePixRepository.buscaChavePixPeloIdChave(novaChaveApagar.pixId)
         apagarChavePix.let { chave ->
@@ -74,15 +70,14 @@ class ChavePixService(@Inject val chavePixRepository: ChavePixRepository,
                 return throw ChavePixNaoExisteException()
             }
         }
+        val returnPixbyChave = bancoDoBrasilService.returnPixbyChave(apagarChavePix.get().chaveBcb.toString())//pode dar erro se o usu não estiver cadastrado no sistema bbc
 
-        val returnPixbyChave = bancoDoBrasilService.returnPixbyChave(apagarChavePix.get().chaveBcb.toString())
-
-        val deletePixKeyRequest =
-            DeletePixKeyRequest(returnPixbyChave.body().key.toString(),
-                returnPixbyChave.body().bankAccount?.participant.toString())
+        val deletePixKeyRequest = DeletePixKeyRequest(returnPixbyChave.body().key.toString(),
+                                                      returnPixbyChave.body().bankAccount?.participant.toString())
 
         chavePixRepository.deletarPixPorChave(apagarChavePix.get().chavePix)
         bancoDoBrasilService.deletePix(apagarChavePix.get().chaveBcb.toString(),deletePixKeyRequest)
+
         return ChaveApagadaPixReponseGrpc("PIX ${apagarChavePix.get().chavePix} apagado")
     }
 

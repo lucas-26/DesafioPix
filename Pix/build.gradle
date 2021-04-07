@@ -37,17 +37,29 @@ dependencies {
     implementation("io.micronaut.sql:micronaut-jdbc-hikari")
     implementation("io.micronaut.data:micronaut-data-hibernate-jpa")
     implementation("io.micronaut.xml:micronaut-jackson-xml")
+
+
     annotationProcessor("io.micronaut:micronaut-inject-java")
     runtimeOnly("ch.qos.logback:logback-classic")
-
     runtimeOnly("com.fasterxml.jackson.module:jackson-module-kotlin")
-
-    //runtimeOnly("com.fasterxml.jackson.module:jackson-module-kotlin")
-
     runtimeOnly("org.postgresql:postgresql")
 
-}
 
+
+    testAnnotationProcessor "io.micronaut:micronaut-inject-java"
+
+// https://mvnrepository.com/artifact/org.mockito/mockito-core
+    testImplementation group: 'org.mockito', name: 'mockito-core', version: '3.8.0'
+
+
+
+    testImplementation("org.junit.jupiter:junit-jupiter-api")
+    testImplementation("io.micronaut.test:micronaut-test-junit5:2.3.3")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.7.1")
+}
+test {
+    useJUnitPlatform()
+}
 
 application {
     mainClass.set("br.com.zupEdu.ApplicationKt")

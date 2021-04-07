@@ -5,23 +5,26 @@ import br.com.zupEdu.ChavePixConsultaResponse
 import br.com.zupEdu.ListaChavesPixDoClienteRequest
 import br.com.zupEdu.grpc.ExtensionFunction.*
 import br.com.zupEdu.PixServiceGrpc
+import br.com.zupEdu.grpc.KeyManagerGrpcFactory
 import br.com.zupEdu.grpc.request.ChavePixDeletarRequestGrpc
 import br.com.zupEdu.grpc.request.ChavePixRequestGrpc
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.annotation.*
 import io.micronaut.validation.Validated
+import javax.inject.Inject
 import javax.validation.Valid
 import javax.validation.constraints.NotBlank
 import javax.validation.constraints.NotNull
 
 @Validated
 @Controller("/api/Pix")
-class PixController(val registraChavePixClient: PixServiceGrpc.PixServiceBlockingStub){
+class PixController(@Inject val registraChavePixClient: PixServiceGrpc.PixServiceBlockingStub,
+                    @Inject val fabrica: KeyManagerGrpcFactory){
 
     @Post(value = "/cadastraChave")
     fun create(@Valid @Body request: ChavePixRequestGrpc) : HttpResponse<Any> {
         return try {
-            registraChavePixClient.gerarChavePix(request.toPixRequest()?.build())
+            fabrica.registraChave().gerarChavePix(request.toPixRequest()?.build())
             HttpResponse.ok()
         } catch (e: Exception){
             HttpResponse.unprocessableEntity()
@@ -31,10 +34,10 @@ class PixController(val registraChavePixClient: PixServiceGrpc.PixServiceBlockin
     @Delete(value = "/deletaChave")
     fun deletaChave(@Valid @Body request: ChavePixDeletarRequestGrpc) : HttpResponse<Any> {
         try {
-            registraChavePixClient.apagarChavePix(request.toDeletPix().build())
+            fabrica.deletaChave().apagarChavePix(request.toDeletPix().build())
             return HttpResponse.ok()
         } catch (e: Exception){
-            return HttpResponse.notFound()
+            return HttpResponse.notFound(e.message)
         }
     }
 
@@ -42,10 +45,9 @@ class PixController(val registraChavePixClient: PixServiceGrpc.PixServiceBlockin
     fun buscaChavePix(@Valid @Body buscaChavePix:BuscaChavePix): HttpResponse<ResponseChavePix>{
         try {
             val build = buscaChavePix.toModelConsultaChave()
-            val consultaChavePix = registraChavePixClient.consultaChavePix(build)
+            val consultaChavePix = fabrica.buscaUmaChavePix().consultaChavePix(build)
             return HttpResponse.ok(consultaChavePix.toObjectResponse())
         } catch (e: Exception){
-            e.printStackTrace()
             return HttpResponse.notFound()
         }
     }
@@ -53,7 +55,7 @@ class PixController(val registraChavePixClient: PixServiceGrpc.PixServiceBlockin
     @Post(value = "/buscaChavesDeUmCliente")
     fun buscaTodasAsChavePix(@Valid @Body buscaChavePix:BuscaChavePix): HttpResponse<MutableList<ResponseChavePix>>{
         return try {
-            val consultaChavesDeUmCliente = registraChavePixClient.consultaChavesDeUmCliente(
+            val consultaChavesDeUmCliente = fabrica.buscaTodasAsChavesPix().consultaChavesDeUmCliente(
                 ListaChavesPixDoClienteRequest.newBuilder().setClienteId(buscaChavePix.clientId).build())
             val response: MutableList<ResponseChavePix> = mutableListOf()
             consultaChavesDeUmCliente.forEach {
