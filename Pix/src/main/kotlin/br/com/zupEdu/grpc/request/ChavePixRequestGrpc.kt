@@ -1,5 +1,7 @@
 package br.com.zupEdu.grpc.request
 
+import br.com.zupEdu.grpc.annotation.ValidPixKey
+import br.com.zupEdu.grpc.annotation.ValidUUID
 import br.com.zupEdu.model.Pix
 import br.com.zupEdu.model.TipoConta
 import br.com.zupEdu.model.TipoDeChave
@@ -9,8 +11,10 @@ import java.util.*
 import javax.validation.constraints.NotNull
 import javax.validation.constraints.Size
 
+@ValidPixKey
 @Introspected
 class ChavePixRequestGrpc(
+    @ValidUUID
     @field:NotNull
     val idInternoClient: String,
     @field:NotNull

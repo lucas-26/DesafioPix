@@ -1,0 +1,4 @@
+package br.com.zupEdu.grpc.exception
+
+class ParametrosNaoForamPassadosCorretamenteException : Exception() {
+}
