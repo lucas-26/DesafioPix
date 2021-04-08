@@ -27,7 +27,8 @@ class PixGrpcServer(@Inject private val service: ChavePixService) : PixServiceGr
 
             val chavePixRequestGrpc = request?.let {
                 ChavePixRequestGrpc(
-                    it.idCliente, request.chave,
+                    it.idCliente,
+                    request.chave,
                     request.tipoChavePix.toString(),
                     request.tipoDeConta.toString())
             }
