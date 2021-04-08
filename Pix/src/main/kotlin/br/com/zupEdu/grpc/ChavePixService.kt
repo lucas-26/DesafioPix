@@ -41,12 +41,6 @@ class ChavePixService(@Inject val chavePixRepository: ChavePixRepository,
             return throw IllegalStateException("Cliente não foi encontrado nos Registros do itau")
         }
 
-        val econtrado = chavePixRepository.buscaSeClienteExiste(response[0].titular.id)
-
-        if (econtrado.isPresent){
-            return throw EsseUsuariojaEstaCadastradoNoSistemaException()
-        }
-
         val request21 = gerarpixBcB(response[0], chavePixModel)
         val registerPix = bancoDoBrasilService.registerPix(request21)
         chavePixModel.chaveBcb =  registerPix.body().key

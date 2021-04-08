@@ -26,7 +26,7 @@ class ChavePixRequestGrpc(
     val tipoConta: String,
 ){
     fun toModel(): Pix {
-        var tipoChavePixEnum: TipoDeChave =
+        val tipoChavePixEnum: TipoDeChave =
             when {
                 tipoChavePix.toUpperCase() == TipoDeChave.TELEFONE_CELULAR.toString() -> {
                     if (!chavePix.matches("^\\+[1-9][0-9]\\d{1,14}\$".toRegex())){
@@ -41,7 +41,7 @@ class ChavePixRequestGrpc(
                     TipoDeChave.CPF
                 }
                 tipoChavePix.toUpperCase() == TipoDeChave.EMAIL.toString() -> {
-                    if (!chavePix.matches("/^[a-z0-9.]+@[a-z0-9]+\\.[a-z]+\\.([a-z]+)?\$/i".toRegex())){
+                    if (!chavePix.matches("^[a-zA-Z0-9_.-]+@[a-zA-Z0-9-]+.[a-zA-Z0-9-.]+\$".toRegex())){
                         throw IllegalArgumentException("o email não está no formato correto")
                     }
                     TipoDeChave.EMAIL
